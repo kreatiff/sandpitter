@@ -8,4 +8,5 @@ export default NextAuth({
       hd: ["stackle.app", "stacklehq.com"],
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET,
 });
