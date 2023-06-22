@@ -86,6 +86,27 @@ export default function Form({ preFilledData }) {
       return updatedPasswords;
     });
   };
+  const generateStudentUserNameEmail = async (index) => {
+    setLoading(true);
+    try {
+      const response = await fetch("/api/generateStudent");
+      const { firstName, lastName } = await response.json();
+
+      const email = `${firstName
+        .charAt(0)
+        .toLowerCase()}.${lastName.toLowerCase()}@student.stackle.app`;
+
+      setUsers((prevUsers) => {
+        const updatedUsers = [...prevUsers];
+        updatedUsers[index].userName = `${firstName} ${lastName}`;
+        updatedUsers[index].userEmail = email;
+        return updatedUsers;
+      });
+    } catch (error) {
+      console.error("Error generating student user:", error);
+    }
+    setLoading(false);
+  };
 
   const handleRowClick = (taskData) => {
     setSubAccountName(taskData.subAccountName);
@@ -222,7 +243,7 @@ export default function Form({ preFilledData }) {
   };
 
   return (
-    <Card sx={{ maxWidth: 600, mx: "auto", mt: 2, p: 4 }}>
+    <Card sx={{ maxWidth: 600, mx: "auto", mt: 0, p: 4 }}>
       <Typography variant="h5" component="div" gutterBottom>
         Course and User Form
       </Typography>
@@ -266,17 +287,39 @@ export default function Form({ preFilledData }) {
 
         {users.map((user, index) => (
           <Box key={index} sx={{ mt: 3 }}>
-            <Typography variant="h6" component="div" gutterBottom>
-              User {index + 1}
-              {index !== 0 && (
-                <IconButton
-                  onClick={() => handleRemoveUser(index)}
-                  color="secondary"
+            <Typography
+              variant="h6"
+              component="div"
+              gutterBottom
+              sx={{ display: "flex", justifyContent: "space-between" }}
+            >
+              <div>
+                User {index + 1}
+                {index !== 0 && (
+                  <IconButton
+                    onClick={() => handleRemoveUser(index)}
+                    color="secondary"
+                  >
+                    <RemoveCircleOutlineIcon />
+                  </IconButton>
+                )}
+              </div>
+              {user.userRole === "StudentEnrollment" && index > 0 && (
+                <Button
+                  onClick={() => {
+                    generateStudentUserNameEmail(index);
+                    generatePassword(index);
+                  }}
+                  color="primary"
+                  startIcon={<CachedIcon />}
+                  disabled={isLoading}
+                  sx={{ mt: 1 }}
                 >
-                  <RemoveCircleOutlineIcon />
-                </IconButton>
+                  Re-generate Student Details
+                </Button>
               )}
             </Typography>
+
             <TextField
               label="User Name"
               name="userName"
@@ -336,12 +379,28 @@ export default function Form({ preFilledData }) {
               <InputLabel>User Role</InputLabel>
               <Select
                 name="userRole"
-                value={user.userRole}
+                value={index === 0 ? "TeacherEnrollment" : user.userRole}
                 onChange={(e) => handleUserChange(index, e)}
                 label="User Role"
               >
-                <MenuItem value="TeacherEnrollment">Teacher</MenuItem>
-                <MenuItem value="StudentEnrollment">Student</MenuItem>
+                <MenuItem
+                  value="TeacherEnrollment"
+                  onClick={() => {
+                    generatePassword(index);
+                  }}
+                >
+                  Teacher
+                </MenuItem>
+                <MenuItem
+                  disabled={index === 0} // Disable the option when index is 0
+                  value="StudentEnrollment"
+                  onClick={() => {
+                    generateStudentUserNameEmail(index);
+                    generatePassword(index);
+                  }}
+                >
+                  Student
+                </MenuItem>
               </Select>
             </FormControl>
           </Box>

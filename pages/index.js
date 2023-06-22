@@ -44,7 +44,8 @@ export default function Home() {
           display="flex"
           justifyContent="center"
           alignItems="stretch" // Set to stretch the TaskTable component's height
-          width="1600px"
+          width="100%"
+          maxWidth="1600px"
           margin="0 auto"
           padding="40px"
         >
