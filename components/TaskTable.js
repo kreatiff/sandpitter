@@ -30,9 +30,15 @@ const TaskTable = ({ onRowClick }) => {
   };
 
   const columns = [
-    { field: "name", headerName: "Name", width: 200, sortable: true },
+    { field: "name", headerName: "Name", width: 300, sortable: true },
     { field: "contact", headerName: "Contact", width: 200, sortable: true },
     { field: "email", headerName: "Email", width: 200, sortable: true },
+    {
+      field: "date_updated",
+      headerName: "Updated",
+      width: 100,
+      sortable: true,
+    },
   ];
 
   const rows = sortedTasks.map((task) => ({
@@ -42,6 +48,9 @@ const TaskTable = ({ onRowClick }) => {
       task.custom_fields.find((field) => field.name === "Contact")?.value || "",
     email:
       task.custom_fields.find((field) => field.name === "Email")?.value || "",
+    date_updated: new Date(parseInt(task.date_updated)).toLocaleDateString(
+      "en-GB"
+    ),
   }));
 
   return (

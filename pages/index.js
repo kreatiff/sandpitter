@@ -1,16 +1,16 @@
 import { useState } from "react";
 import Form from "../components/Form";
 import TaskTable from "../components/TaskTable";
-import { Grid, Box } from "@mui/material";
+import { Typography, Button, Grid, Box } from "@mui/material";
 import { useRouter } from "next/router";
 import { useSession, signIn, signOut } from "next-auth/react";
 import Header from "../components/Header";
+import GoogleIcon from "@mui/icons-material/Google";
 
 export default function Home() {
   const { data: session } = useSession();
   const [preFilledData, setPreFilledData] = useState(null);
   const [data, setData] = useState(null);
-  const router = useRouter();
 
   const onSubmit = async (values) => {
     const res = await fetch("/api/createSubAccount", {
@@ -27,6 +27,7 @@ export default function Home() {
   const handleRowClick = (task) => {
     const data = {
       subAccountName: task.name,
+      taskId: task.id,
       userName:
         task.custom_fields.find((field) => field.name === "Contact")?.value ||
         "",
@@ -65,9 +66,27 @@ export default function Home() {
     );
   }
   return (
-    <div>
-      <h2> You are not signed in!!</h2>
-      <button onClick={() => signIn()}>Sign in</button>
-    </div>
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
+    >
+      <Button
+        onClick={() => signIn("google")}
+        variant="contained"
+        color="primary"
+        size="large"
+        startIcon={<GoogleIcon />}
+        sx={{
+          color: "white", // Set text color to white
+        }}
+      >
+        Sign in with Google
+      </Button>
+    </Box>
   );
 }

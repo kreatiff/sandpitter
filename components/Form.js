@@ -20,6 +20,7 @@ export default function Form({ preFilledData }) {
   const [parentAccount, setParentAccount] = useState("");
   const [parentAccounts, setParentAccounts] = useState([]);
   const [subAccountName, setSubAccountName] = useState("");
+  const [taskId, setTaskId] = useState("");
   const [courseName, setCourseName] = useState("");
   const [users, setUsers] = useState([]);
   const [generatedPasswords, setGeneratedPasswords] = useState([]);
@@ -88,7 +89,7 @@ export default function Form({ preFilledData }) {
 
   const handleRowClick = (taskData) => {
     setSubAccountName(taskData.subAccountName);
-
+    setTaskId(taskData.id);
     setUsers((prevUsers) => {
       const updatedUsers = [...prevUsers];
       if (updatedUsers.length > 0) {
@@ -112,9 +113,10 @@ export default function Form({ preFilledData }) {
 
   useEffect(() => {
     if (preFilledData) {
-      const { subAccountName, userName, userEmail } = preFilledData;
+      const { subAccountName, userName, userEmail, taskId } = preFilledData;
 
       setSubAccountName(subAccountName);
+      setTaskId(taskId);
 
       setUsers((prevUsers) => {
         const updatedUsers = [...prevUsers];
@@ -127,6 +129,7 @@ export default function Form({ preFilledData }) {
     } else {
       // Reset the form fields if no pre-filled data is provided
       setSubAccountName("");
+      setTaskId("");
       setUsers([
         {
           userName: "",
@@ -146,7 +149,10 @@ export default function Form({ preFilledData }) {
       const subAccountRes = await fetch("/api/createSubAccount", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subAccountName }),
+        body: JSON.stringify({
+          subAccountName,
+          parentAccountID: parentAccount,
+        }), // Include parentAccount in the request body
       });
       if (!subAccountRes.ok) throw new Error("Error creating subaccount");
       const subAccountData = await subAccountRes.json();
@@ -190,6 +196,26 @@ export default function Form({ preFilledData }) {
 
         console.log("Enrollment response:", enrollmentData);
       }
+
+      // 4. Post comment to ClickUp task
+      const courseUrl = `https://stackle.instructure.com/courses/${courseData.id}`; // Replace with the actual course URL
+      let comment = `Course URL: ${courseUrl}`;
+      users.forEach((user) => {
+        comment += `\n${
+          user.userRole === "TeacherEnrollment" ? "Teacher" : "Student"
+        } User Details`;
+        comment += `\nEmail: ${user.userEmail} \nPassword: ${user.userPassword}`;
+      });
+      const postCommentRes = await fetch("/api/postClickupComment", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ taskId, comment }),
+      });
+      if (!postCommentRes.ok)
+        throw new Error("Error posting comment to ClickUp task");
+      const commentResponse = await postCommentRes.json();
+
+      console.log("Comment response:", commentResponse);
     } catch (error) {
       console.error(error);
     }
@@ -201,6 +227,7 @@ export default function Form({ preFilledData }) {
         Course and User Form
       </Typography>
       <form onSubmit={handleSubmit}>
+        <input type="hidden" name="taskId" value={taskId} />
         <FormControl variant="outlined" margin="normal" fullWidth required>
           <InputLabel>Parent Account</InputLabel>
           <Select
