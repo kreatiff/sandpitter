@@ -11,6 +11,10 @@ import {
   MenuItem,
   IconButton,
   InputAdornment,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
@@ -25,6 +29,7 @@ export default function Form({ preFilledData }) {
   const [users, setUsers] = useState([]);
   const [generatedPasswords, setGeneratedPasswords] = useState([]);
   const [isLoading, setLoading] = useState(false);
+  const [showConfirmation, setShowConfirmation] = useState(false); // Track whether to show the confirmation dialog
 
   const generatePassword = async (index) => {
     setLoading(true);
@@ -164,6 +169,13 @@ export default function Form({ preFilledData }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Show the confirmation dialog
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmationSubmit = async () => {
+    // Hide the confirmation dialog
+    setShowConfirmation(false);
 
     try {
       // 1. Create a new subaccount
@@ -379,7 +391,7 @@ export default function Form({ preFilledData }) {
               <InputLabel>User Role</InputLabel>
               <Select
                 name="userRole"
-                value={index === 0 ? "TeacherEnrollment" : user.userRole}
+                value={user.userRole}
                 onChange={(e) => handleUserChange(index, e)}
                 label="User Role"
               >
@@ -392,7 +404,6 @@ export default function Form({ preFilledData }) {
                   Teacher
                 </MenuItem>
                 <MenuItem
-                  disabled={index === 0} // Disable the option when index is 0
                   value="StudentEnrollment"
                   onClick={() => {
                     generateStudentUserNameEmail(index);
@@ -426,6 +437,40 @@ export default function Form({ preFilledData }) {
           Submit
         </Button>
       </form>
+      {/* Confirmation Dialog */}
+      <Dialog
+        open={showConfirmation}
+        onClose={() => setShowConfirmation(false)}
+      >
+        <DialogTitle>Confirmation</DialogTitle>
+        <DialogContent>
+          <Typography gutterBottom>Confirm the following details:</Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Parent Account: {parentAccount}
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Subaccount Name: {subAccountName}
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Course Name: {courseName}
+          </Typography>
+          <Typography variant="subtitle1" gutterBottom>
+            Users:
+          </Typography>
+          {users.map((user, index) => (
+            <Typography key={index} variant="body1">
+              User {index + 1} - Name: {user.userName}, Email: {user.userEmail},
+              Role: {user.userRole}
+            </Typography>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setShowConfirmation(false)}>Cancel</Button>
+          <Button onClick={handleConfirmationSubmit} color="primary">
+            Confirm
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Card>
   );
 }
